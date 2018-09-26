@@ -1,0 +1,12 @@
+
+.gradle/
+.idea/
+build/
+Knights-of-Sidonia-vol1/
+out/
+
+Makefile
+*.ambi
+*.zip
+*.jar
+libs/

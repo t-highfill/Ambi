@@ -1,0 +1,43 @@
+group 'org.thighfill'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'application'
+
+sourceCompatibility = 1.8
+
+repositories {
+  mavenCentral()
+  flatDir {
+    dirs 'libs'
+  }
+}
+
+dependencies {
+  testCompile group: 'junit', name: 'junit', version: '4.12'
+  // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
+  compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.9'
+  compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.8.9'
+  compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.8.9'
+
+  // For Logging
+  compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
+  compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
+
+  // https://mvnrepository.com/artifact/commons-io/commons-io
+  compile group: 'commons-io', name: 'commons-io', version: '2.5'
+
+  // https://mvnrepository.com/artifact/org.apache.commons/commons-text
+  compile group: 'org.apache.commons', name: 'commons-text', version: '1.1'
+
+  //PDF stuff
+  compile name:'pdfbox-2.0.7'
+
+  //MP3 player lib
+  compile name:'jaco-mp3-player-0.9.3'
+
+  //MP3 ID3 Metadata lib
+  compile group:'com.mpatric', name:'mp3agic', version:'0.9.0'
+}
+
+mainClassName = 'org.thighfill.ambi.Ambi'
