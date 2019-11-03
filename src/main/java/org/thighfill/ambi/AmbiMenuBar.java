@@ -13,9 +13,11 @@ import javax.swing.KeyStroke;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -42,6 +44,8 @@ public class AmbiMenuBar extends JMenuBar {
         });
 
         addButton(file, "Open", KeyStroke.getKeyStroke('O', InputEvent.CTRL_MASK), e -> open());
+        file.add(new HistoryMenu());
+        file.addSeparator();
         addButton(file, "Exit", e -> exit());
         autoMnemonic(file);
 
@@ -173,5 +177,23 @@ public class AmbiMenuBar extends JMenuBar {
             res.put(ALPHABET.charAt(i), keys[i]);
         }
         return Collections.unmodifiableMap(res);
+    }
+
+    private class HistoryMenu extends JMenu {
+        public HistoryMenu() {
+            super("Open Recent");
+            this.setVisible(true);
+            context.getConfiguration().historyUpdated.addListener(e -> rebuild());
+            rebuild();
+        }
+
+        private void rebuild(){
+            this.removeAll();
+            for(String file : context.getConfiguration().getFileHistory()){
+                addButton(this, file, e -> context.getAmbi().open(new File(file)));
+            }
+            this.addSeparator();
+            addButton(this, "Clear history", e -> context.getConfiguration().clearHistory());
+        }
     }
 }

@@ -1,8 +1,13 @@
 package org.thighfill.ambi;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.thighfill.ambi.event.Event;
+import org.thighfill.ambi.event.EventDriver;
+
 import java.awt.Dimension;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
@@ -10,15 +15,52 @@ import java.util.List;
 
 public class Configuration {
 
+    private static final int HISTORY_LIMIT = 10;
+
     public static Configuration fromJSON(InputStream in) throws IOException {
         return new ObjectMapper().readValue(in, Configuration.class);
     }
 
     private List<String> songPackPaths = new LinkedList<>();
+    private List<String> fileHistory = new LinkedList<>();
+
+    public static class HistoryEvent{
+        private final List<String> _newHist;
+
+        private HistoryEvent(List<String> newHist) {
+            _newHist = newHist;
+        }
+
+        public List<String> getNewHist() {
+            return _newHist;
+        }
+    }
+    @JsonIgnore
+    private EventDriver<HistoryEvent> _historyDriver = new EventDriver<>();
+    @JsonIgnore
+    public Event<HistoryEvent> historyUpdated = _historyDriver.getMyEvent();
 
     private AmbiFrameConfig ambiFrame;
     private PreviewPanelConfig previewPanel;
     private ToolbarConfig toolbar;
+
+    public List<String> getFileHistory() {
+        return new LinkedList<>(fileHistory);
+    }
+
+    public void addFileToHistory(File file){
+        String fpath = file.getAbsolutePath();
+        fileHistory.remove(fpath);
+        fileHistory.add(0, fpath);
+        while(fileHistory.size() > HISTORY_LIMIT){
+            fileHistory.remove(fileHistory.size()-1);
+        }
+        _historyDriver.fire(new HistoryEvent(fileHistory));
+    }
+
+    public void clearHistory(){
+        fileHistory = new LinkedList<>();
+    }
 
     public AmbiFrameConfig getAmbiFrame() {
         return ambiFrame;

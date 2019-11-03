@@ -224,15 +224,7 @@ public class Ambi extends JFrame {
         switch (res) {
         case JFileChooser.APPROVE_OPTION:
             File f = fc.getSelectedFile();
-            LOGGER.info("Opening doc: {}", f);
-            Util.busyCursorWhile(context, () -> {
-                try {
-                    context.openDocument(f);
-                }
-                catch (IOException e) {
-                    Util.handleError(context, "Opening doc", e);
-                }
-            });
+            open(f);
             break;
         case JFileChooser.CANCEL_OPTION:
             LOGGER.info("User cancelled open");
@@ -240,6 +232,19 @@ public class Ambi extends JFrame {
         default:
             LOGGER.error("Unknown return value from file chooser: {}", res);
         }
+    }
+
+    public void open(File f){
+        context.getConfiguration().addFileToHistory(f);
+        LOGGER.info("Opening doc: {}", f);
+        Util.busyCursorWhile(context, () -> {
+            try {
+                context.openDocument(f);
+            }
+            catch (IOException e) {
+                Util.handleError(context, "Opening doc", e);
+            }
+        });
     }
 
     public void exit() {

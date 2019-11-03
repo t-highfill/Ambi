@@ -88,7 +88,7 @@ public class SimpleAmbiContext implements AmbiContext {
         LOGGER.info("Saving local config file at {}", _localConfig);
         if (!_localConfig.exists()) {
             LOGGER.info("Creating local file");
-            _localConfig.createNewFile();
+            Files.createFile(_localConfig.toPath());
         }
         if (_songPacks != null) {
             _config.setSongPackPaths(_songPacks.stream().map(SongPack::getFilename).filter(Objects::nonNull)
