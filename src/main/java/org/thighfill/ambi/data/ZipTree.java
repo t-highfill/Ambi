@@ -1,39 +1,64 @@
 package org.thighfill.ambi.data;
 
+import org.apache.logging.log4j.Logger;
+import org.thighfill.ambi.util.Util;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class ZipTree {
+public class ZipTree implements AutoCloseable {
+
+    private static final Logger LOGGER = Util.getLogger(ZipTree.class);
 
     private final ZipFile _zipFile;
     private final ZDirectory _root;
 
     public ZipTree(ZipFile zipFile) {
         _zipFile = zipFile;
-        Map<ZipEntry, LinkedList<String>> entriesMap = new HashMap<>();
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        while (entries.hasMoreElements()) {
-            ZipEntry entry = entries.nextElement();
-            entriesMap.put(entry, new LinkedList<>(Arrays.asList(entry.getName().split("/"))));
-        }
-        _root = new ZDirectory(null, "", entriesMap);
+        _root = new ZDirectory(null, "/");
+        zipFile.stream().forEach(e -> {
+            LinkedList<String> path = new LinkedList<>(Arrays.asList(e.getName().split("/")));
+            LOGGER.debug("Adding Entry {}", path);
+            _root.add(e, path);
+        });
+    }
+
+    private ZipTree(ZipFile zipFile, ZDirectory root){
+        _zipFile = zipFile;
+        _root = root;
+    }
+
+    public ZipTree chroot(ZDirectory newRoot){
+        return new ZipTree(_zipFile, newRoot);
     }
 
     public ZDirectory getRoot() {
         return _root;
     }
 
-    public static abstract class ZFile {
-        private final String _name;
-        private final ZFile _parent;
+    private static <E> LinkedList<E> popCopy(LinkedList<E> list) {
+        LinkedList<E> res = new LinkedList<>(list);
+        res.removeFirst();
+        return res;
+    }
 
-        protected ZFile(ZFile parent, String name) {
+    @Override
+    public void close() throws IOException {
+        _zipFile.close();
+    }
+
+    public abstract class ZFile {
+        private final String _name;
+        private final ZDirectory _parent;
+
+        protected ZFile(ZDirectory parent, String name) {
             _parent = parent;
             _name = name;
         }
@@ -44,33 +69,45 @@ public class ZipTree {
             return _name;
         }
 
-        public ZFile getParent() {
+        public ZDirectory getParent() {
             return _parent;
+        }
+
+        public abstract ZRegFile asRegFile();
+
+        @Override
+        public String toString() {
+            String pre = _parent == null ? "" : (_parent.toString() + "/");
+            return pre + _name;
         }
     }
 
-    private static <E> LinkedList<E> popCopy(LinkedList<E> list) {
-        LinkedList<E> res = new LinkedList<>(list);
-        res.removeFirst();
-        return res;
-    }
-
-    public static class ZDirectory extends ZFile {
+    public class ZDirectory extends ZFile {
         private final Map<String, ZFile> _listing;
 
-        public ZDirectory(ZFile parent, String name, Map<ZipEntry, LinkedList<String>> entries) {
+        public ZDirectory(ZDirectory parent, String name) {
             super(parent, name);
-            _listing = entries.entrySet().stream().collect(Collectors.toMap(e -> e.getValue().get(0), e -> {
-                LinkedList<String> path = e.getValue();
-                String fname = path.get(0);
-                if (path.size() == 1) {
-                    return new ZRegFile(this, fname, e.getKey());
+            _listing = new HashMap<>();
+        }
+
+        private void add(ZipEntry entry, LinkedList<String> path) {
+            if (path.isEmpty()) {
+                return;
+            }
+            String fname = path.get(0);
+            if (path.size() == 1 && !entry.isDirectory()) {
+                LOGGER.debug("Adding File \"{}\" to \"{}\"", fname, this.toString());
+                _listing.put(fname, new ZRegFile(this, fname, entry));
+            }
+            else {
+                ZDirectory sub = (ZDirectory) _listing.get(fname);
+                if (sub == null) {
+                    LOGGER.debug("Adding Directory \"{}\" to \"{}\"", fname, this.toString());
+                    sub = new ZDirectory(this, fname);
+                    _listing.put(fname, sub);
                 }
-                Map<ZipEntry, LinkedList<String>> nextLvl = entries.entrySet().stream().filter(
-                        e2 -> e2.getValue().size() > 1).filter(e2 -> e2.getValue().get(0).equals(fname)).collect(
-                        Collectors.toMap(Map.Entry::getKey, e2 -> popCopy(e2.getValue())));
-                return new ZDirectory(this, fname, nextLvl);
-            }));
+                sub.add(entry, popCopy(path));
+            }
         }
 
         public ZFile get(String name) {
@@ -93,17 +130,41 @@ public class ZipTree {
             return null;
         }
 
+        public ZFile followPath(String path) throws FileNotFoundException {
+            return followPath(path.split("/"), 0);
+        }
+
+        private ZFile followPath(String[] path, int start) throws FileNotFoundException {
+            ZFile next = get(path[start]);
+            if (next == null) {
+                throw new FileNotFoundException(
+                        String.format("Could not find file %s in directory %s", path[start], this));
+            }
+            if (start == path.length - 1) {
+                return next;
+            }
+            if (next.isDirectory()) {
+                return ((ZDirectory) next).followPath(path, start + 1);
+            }
+            throw new FileNotFoundException();
+        }
+
         @Override
         public boolean isDirectory() {
             return true;
         }
+
+        @Override
+        public ZRegFile asRegFile() {
+            throw new RuntimeException("This is a directory!");
+        }
     }
 
-    public static class ZRegFile extends ZFile {
+    public class ZRegFile extends ZFile {
 
         private final ZipEntry _zipEntry;
 
-        protected ZRegFile(ZFile parent, String name, ZipEntry zipEntry) {
+        protected ZRegFile(ZDirectory parent, String name, ZipEntry zipEntry) {
             super(parent, name);
             _zipEntry = zipEntry;
         }
@@ -113,8 +174,17 @@ public class ZipTree {
             return false;
         }
 
+        @Override
+        public ZRegFile asRegFile() {
+            return this;
+        }
+
         public ZipEntry getZipEntry() {
             return _zipEntry;
+        }
+
+        public InputStream getInputStream() throws IOException {
+            return _zipFile.getInputStream(_zipEntry);
         }
     }
 }

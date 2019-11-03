@@ -19,7 +19,7 @@ public class ImagePage extends Page {
     private String _imgFile;
     private File _tmpFile;
 
-    protected ImagePage(AmbiDocument doc, ZipFile zip, Bean bean) {
+    protected ImagePage(AmbiDocument doc, ZipTree zipTree, Bean bean) {
         super(doc, bean);
         _imgFile = bean.imgFile;
         if (_imgFile == null) {
@@ -27,9 +27,8 @@ public class ImagePage extends Page {
         }
         try {
             _tmpFile = Util.createTempFile(getContext(), "ambiImgPg", '.' + Util.fileExt(_imgFile));
-            ZipEntry ent = Util.getEntry(zip, _imgFile);
             try (FileOutputStream out = new FileOutputStream(_tmpFile)) {
-                IOUtils.copy(zip.getInputStream(ent), out);
+                IOUtils.copy(zipTree.getRoot().followPath(_imgFile).asRegFile().getInputStream(), out);
             }
         }
         catch (IOException e) {

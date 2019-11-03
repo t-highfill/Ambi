@@ -18,21 +18,20 @@ public class Song extends ZipStorable<Song.Bean> {
     private static final Logger LOGGER = Util.getLogger(Song.class);
 
     private String _filename, _id, _name, _artist;
-    private ZipEntry _entry;
     private ZipFile _zip;
     private File _tmpFile;
 
-    protected Song(AmbiContext context, ZipFile zip, Bean bean) throws IOException {
+    protected Song(AmbiContext context, ZipTree zipTree, Bean bean) throws IOException {
         super(context);
         _filename = bean.filename;
         _id = bean.id;
-        _entry = Util.getEntry(zip, _filename);
+        ZipTree.ZRegFile entry = zipTree.getRoot().followPath(bean.filename).asRegFile();
         _name = bean.name;
         _artist = bean.artist;
         String[] f = _filename.split("\\.");
         String format = f[f.length - 1];
         _tmpFile = Util.createTempFile(context, "ambisong", '.' + format);
-        try (InputStream in = zip.getInputStream(_entry);
+        try (InputStream in = entry.getInputStream();
                 OutputStream out = new FileOutputStream(_tmpFile)) {
             LOGGER.debug("Copying song to temp file {}", _tmpFile);
             IOUtils.copy(in, out);
@@ -61,14 +60,6 @@ public class Song extends ZipStorable<Song.Bean> {
 
     public void setId(String id) {
         _id = id;
-    }
-
-    public ZipEntry getEntry() {
-        return _entry;
-    }
-
-    public void setEntry(ZipEntry entry) {
-        _entry = entry;
     }
 
     public ZipFile getZip() {

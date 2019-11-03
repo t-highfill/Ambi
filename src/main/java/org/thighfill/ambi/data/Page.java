@@ -55,11 +55,11 @@ public abstract class Page extends ZipStorable<Page.Bean> {
         return Type.valueOf(type.toUpperCase());
     }
 
-    protected static Page fromBean(AmbiDocument document, ZipFile zip, Bean bean) {
+    protected static Page fromBean(AmbiDocument document, ZipTree zipTree, Bean bean) {
         Type t = valueOfIgnoreCase(bean.type);
         switch (t) {
         case IMAGE:
-            return new ImagePage(document, zip, bean);
+            return new ImagePage(document, zipTree, bean);
         case TEXT:
             return new TextPage(document, bean);
         default:

@@ -33,7 +33,7 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
     private final Cache<File, BufferedImage> _imageCache;
 
     public AmbiDocument(AmbiContext context, ZipFile zip) throws IOException {
-        this(context, zip, processZip(zip));
+        this(context, new ZipTree(zip));
         new Thread(() -> {
             try {
                 waitForLoad();
@@ -50,8 +50,11 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
         }).start();
     }
 
-    protected AmbiDocument(AmbiContext context, ZipFile zip, Bean bean) throws IOException {
+    protected AmbiDocument(AmbiContext context, ZipTree zipTree) throws IOException {
         super(context);
+        ZipTree.ZRegFile mainFile = findMainFile(zipTree);
+        Bean bean = processZip(mainFile);
+        ZipTree newRoot = zipTree.chroot(mainFile.getParent());
         _imageCache = new RecencyCache<>(imgFile -> {
             try (FileInputStream fis = new FileInputStream(imgFile)) {
                 return ImageIO.read(fis);
@@ -63,7 +66,7 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
         }, 10);
         _name = bean.name;
         _author = bean.author;
-        _songPack = bean.songPack == null ? null : new SongPack(context, zip, bean.songPack);
+        _songPack = bean.songPack == null ? null : new SongPack(context, newRoot, bean.songPack);
         _monitor = new ProgressMonitor(context.getAmbi(), "Loading pages", "", 0, bean.pages.size());
         pages = new ArrayList<>(bean.pages.size());
         _loadThread = new Thread(() -> {
@@ -73,7 +76,7 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
                 if (_monitor.isCanceled()) {
                     break;
                 }
-                pages.add(Page.fromBean(this, zip, b));
+                pages.add(Page.fromBean(this, newRoot, b));
                 idx++;
                 _monitor.setProgress(idx);
             }
@@ -104,8 +107,12 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
         return res;
     }
 
-    private static Bean processZip(ZipFile zip) throws IOException {
-        return MAPPER.readValue(zip.getInputStream(Util.getEntry(zip, MAIN_FILE)), Bean.class);
+    private static ZipTree.ZRegFile findMainFile(ZipTree zipTree){
+        return zipTree.getRoot().find(MAIN_FILE).asRegFile();
+    }
+
+    private static Bean processZip(ZipTree.ZRegFile mainFile) throws IOException {
+        return MAPPER.readValue(mainFile.getInputStream(), Bean.class);
     }
 
     public List<Page> getPages() {

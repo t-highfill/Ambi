@@ -21,26 +21,30 @@ public class SongPack extends ZipStorable<SongPack.Bean> {
     private List<Clip> _clips;
     private String _filename = null;
 
-    protected SongPack(AmbiContext context, ZipFile zip, Bean bean) throws IOException {
+    protected SongPack(AmbiContext context, ZipTree zipTree, Bean bean) throws IOException {
         super(context);
         _name = bean.name;
         _author = bean.author;
         List<Song> songs;
         songs = new ArrayList<>(bean.songs.size());
         for (Song.Bean b : bean.songs) {
-            songs.add(new Song(context, zip, b));
+            songs.add(new Song(context, zipTree, b));
         }
         _songs = songs;
         _clips = bean.clips.stream().map(b -> new Clip(context, _songs, b)).collect(Collectors.toList());
     }
 
-    public SongPack(AmbiContext context, ZipFile zip) throws IOException {
-        this(context, zip, fromZip(zip));
-        zip.close();
+    private SongPack(AmbiContext context, ZipTree zipTree, ZipTree.ZRegFile mainFile) throws IOException {
+        this(context, zipTree.chroot(mainFile.getParent()), fromZip(mainFile));
+    }
+
+    public SongPack(AmbiContext context, ZipTree zipTree) throws IOException {
+        this(context, zipTree, findMainFile(zipTree));
+        zipTree.close();
     }
 
     public SongPack(AmbiContext context, String path) throws IOException {
-        this(context, new ZipFile(path));
+        this(context, new ZipTree(new ZipFile(path)));
         _filename = path;
     }
 
@@ -63,8 +67,12 @@ public class SongPack extends ZipStorable<SongPack.Bean> {
         return null; //TODO
     }
 
-    private static Bean fromZip(ZipFile zip) throws IOException {
-        return new ObjectMapper().readValue(zip.getInputStream(Util.getEntry(zip, MAIN_FILE)), Bean.class);
+    private static ZipTree.ZRegFile findMainFile(ZipTree zipTree){
+        return zipTree.getRoot().find(MAIN_FILE).asRegFile();
+    }
+
+    private static Bean fromZip(ZipTree.ZRegFile mainFile) throws IOException {
+        return new ObjectMapper().readValue(mainFile.getInputStream(), Bean.class);
     }
 
     @Override
