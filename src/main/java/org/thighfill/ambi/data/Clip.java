@@ -92,6 +92,10 @@ public class Clip extends ZipStorable<Clip.Bean> {
         _song = song;
     }
 
+    public String getID() {
+        return null;
+    }
+
     protected static class Bean {
         public String name = "", songID = "";
         public List<String> themes = new ArrayList<>();

@@ -1,12 +1,13 @@
 package org.thighfill.ambi.data;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 import org.thighfill.ambi.ScalingLabel;
 import org.thighfill.ambi.util.Util;
 
-import javax.imageio.ImageIO;
-
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -16,7 +17,7 @@ public class ImagePage extends Page {
     private static final Logger LOGGER = Util.getLogger(ImagePage.class);
 
     private String _imgFile;
-    private BufferedImage _img = null;
+    private File _tmpFile;
 
     protected ImagePage(AmbiDocument doc, ZipFile zip, Bean bean) {
         super(doc, bean);
@@ -25,23 +26,25 @@ public class ImagePage extends Page {
             throw new IllegalArgumentException("Image file cannot be null");
         }
         try {
+            _tmpFile = Util.createTempFile(getContext(), "ambiImgPg", '.' + Util.fileExt(_imgFile));
             ZipEntry ent = Util.getEntry(zip, _imgFile);
-            _img = ent == null ? null : ImageIO.read(zip.getInputStream(ent));
+            try(FileOutputStream out = new FileOutputStream(_tmpFile)){
+                IOUtils.copy(zip.getInputStream(ent), out);
+            }
         } catch(IOException e) {
             Util.handleError(getContext(), "Loading Image", e);
-            _img = null;
         }
     }
 
     @Override
     public BufferedImage getIcon() {
-        return _img;
+        return getDoc().getImageCache().get(_tmpFile);
     }
 
     @Override
     public void addToLabel(ScalingLabel label) {
         label.setText("");
-        label.setMaster(_img);
+        label.setMaster(getIcon());
     }
 
     @Override

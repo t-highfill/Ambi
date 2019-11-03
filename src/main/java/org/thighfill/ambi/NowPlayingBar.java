@@ -47,7 +47,9 @@ public class NowPlayingBar extends JToolBar {
             _metaPanel.add(c);
         });
 
-        _songPackSelector.addItem(new InternalSongPack());
+        SongPack internal = new InternalSongPack();
+        setSongPack(internal);
+        _songPackSelector.addItem(internal);
         _context.getKnownSongPacks().forEach(_songPackSelector::addItem);
 
         _songPackSelector.addActionListener(e -> setSongPack((SongPack) _songPackSelector.getSelectedItem()));
@@ -89,6 +91,11 @@ public class NowPlayingBar extends JToolBar {
                 return;
             }
             clip = pack.getAppropriateClip(page.getThemes());
+            if(clip == null){
+                LOGGER.warn("No clip found for page {} in pack {}", _page, pack);
+                _player.stop();
+                return;
+            }
         }
         _songName.setText(clip.getName());
         _artist.setText(clip.getArtist());

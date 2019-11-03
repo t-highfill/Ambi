@@ -23,11 +23,13 @@ public interface AmbiContext {
 
     Configuration getConfiguration();
 
-    public File getLocalDirectory();
+    File getLocalDirectory();
 
-    public File getLocalConfigFile();
+    File getTempDirectory();
 
-    public void saveConfiguration() throws IOException;
+    File getLocalConfigFile();
 
-    public List<SongPack> getKnownSongPacks();
+    void saveConfiguration() throws IOException;
+
+    List<SongPack> getKnownSongPacks();
 }

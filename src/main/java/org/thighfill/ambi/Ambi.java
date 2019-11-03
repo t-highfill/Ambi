@@ -25,6 +25,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -107,7 +109,33 @@ public class Ambi extends JFrame {
 //        docViewPanel.setLayout(new BoxLayout(docViewPanel, BoxLayout.LINE_AXIS));
         docViewPanel.setLayout(new GridLayout(1,2));
         docViewPanel.add(leftPage);
+        leftPage.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(_currentDoc == null) {
+                    return;
+                }
+                if(_currentDoc.isRightToLeft()){
+                    nextPage();
+                }else{
+                    prevPage();
+                }
+            }
+        });
         docViewPanel.add(rightPage);
+        rightPage.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(_currentDoc == null) {
+                    return;
+                }
+                if(_currentDoc.isRightToLeft()){
+                    prevPage();
+                }else{
+                    nextPage();
+                }
+            }
+        });
         docViewPanel.setMinimumSize(new Dimension(0, 0));
 
         KeyListener pageTurn = new KeyAdapter() {
@@ -132,7 +160,7 @@ public class Ambi extends JFrame {
                 }
             }
         };
-        Stream.of(docViewPanel, previewPanel, previewPanel).forEach(c -> c.addKeyListener(pageTurn));
+        Stream.of(this, docViewPanel, previewPanel, previewPanel).forEach(c -> c.addKeyListener(pageTurn));
 
         try {
             setDocument(null);

@@ -14,6 +14,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -25,13 +28,21 @@ public class SimpleAmbiContext implements AmbiContext {
 
     private final Ambi _parent;
     private final Configuration _config;
-    private final File _localDir, _localConfig;
+    private final File _localDir, _localConfig, _tempDir;
     private List<SongPack> _songPacks = null;
 
     public SimpleAmbiContext(Ambi parent) {
         _parent = parent;
         _localDir = new File(System.getProperty("user.home"), ".ambi");
-        _localDir.mkdirs();
+        _tempDir = new File(_localDir, "tmp");
+        try {
+            Files.createDirectories(_localDir.toPath());
+            checkTempDir();
+        }
+        catch (IOException e) {
+            Util.handleError(this, "Creating local directories", e);
+            System.exit(-1);
+        }
         assert _localDir.exists();
         LOGGER.info("Local dir set to {}", _localDir);
         _localConfig = new File(_localDir, "settings.json");
@@ -56,6 +67,18 @@ public class SimpleAmbiContext implements AmbiContext {
             System.exit(-1);
         }
         _config = config;
+    }
+
+    private void checkTempDir() throws IOException {
+        Path tmp = _tempDir.toPath();
+        // Create it if it doesn't exist
+        Files.createDirectories(tmp);
+        // Clear out any old files we might have missed
+        try(DirectoryStream<Path> stream = Files.newDirectoryStream(tmp)){
+            for(Path path : stream){
+                Files.delete(path);
+            }
+        }
     }
 
     @Override
@@ -97,6 +120,11 @@ public class SimpleAmbiContext implements AmbiContext {
     @Override
     public File getLocalDirectory() {
         return _localDir;
+    }
+
+    @Override
+    public File getTempDirectory() {
+        return _tempDir;
     }
 
     @Override

@@ -3,6 +3,8 @@ package org.thighfill.ambi;
 import org.apache.logging.log4j.Logger;
 import org.thighfill.ambi.data.AmbiDocument;
 import org.thighfill.ambi.data.Page;
+import org.thighfill.ambi.data.cache.Cache;
+import org.thighfill.ambi.data.cache.RecencyCache;
 import org.thighfill.ambi.util.Util;
 
 import javax.swing.BorderFactory;
@@ -14,6 +16,7 @@ import javax.swing.JScrollPane;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -35,11 +38,13 @@ public class PreviewPanel extends JPanel {
     private PagePreview currPage = null;
     private final Ambi _ambi;
     private final Configuration.PreviewPanelConfig config;
+    private final Cache<Integer, ImageIcon> imgCache;
 
     public PreviewPanel(Ambi ambi) {
         this._ambi = ambi;
         config = ambi.getContext().getConfiguration().getPreviewPanel();
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        imgCache = new RecencyCache<>(i-> new ImageIcon(scaleWidth(currDoc.getPages().get(i).getIcon(), config.getIconWidth())), 20);
     }
 
     public void setDocument(AmbiDocument doc) {
@@ -100,9 +105,9 @@ public class PreviewPanel extends JPanel {
             setAlignmentX(Component.CENTER_ALIGNMENT);
             setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
             setMaximumSize(null);
+            setMinimumSize(new Dimension(100, 100));
 
-            int iconWidth = config.getIconWidth();
-            imgLbl = new JLabel(new ImageIcon(scaleWidth(page.getIcon(), iconWidth)));
+            imgLbl = new JLabel();
             imgLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
             add(imgLbl);
 

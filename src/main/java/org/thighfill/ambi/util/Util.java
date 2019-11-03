@@ -74,7 +74,7 @@ public final class Util {
     }
 
     public static File createTempFile(AmbiContext context, String prefix, String postfix) throws IOException {
-        File tmp = File.createTempFile(prefix, postfix);
+        File tmp = File.createTempFile(prefix, postfix, context.getTempDirectory());
         tmp.deleteOnExit();
         return tmp;
     }
@@ -85,5 +85,10 @@ public final class Util {
 
     public static void handleError(AmbiContext context, Exception e) {
         handleError(context, "Unhandled exception", e);
+    }
+
+    public static String fileExt(String fileName) {
+        String[] arr = fileName.split("\\.");
+        return arr[arr.length-1];
     }
 }

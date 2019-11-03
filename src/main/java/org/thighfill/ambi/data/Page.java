@@ -17,9 +17,11 @@ public abstract class Page extends ZipStorable<Page.Bean> {
     private Type _type;
     private Clip _clip;
     private List<Theme> _themes;
+    private AmbiDocument _doc;
 
     protected Page(AmbiDocument doc, Bean bean) {
         super(doc.getContext());
+        _doc = doc;
         _type = valueOfIgnoreCase(bean.type);
         SongPack pack = doc.getSongPack();
         if(pack != null){
@@ -78,6 +80,10 @@ public abstract class Page extends ZipStorable<Page.Bean> {
 
     public void setThemes(List<Theme> themes) {
         _themes = themes;
+    }
+
+    public AmbiDocument getDoc() {
+        return _doc;
     }
 
     protected static class Bean {

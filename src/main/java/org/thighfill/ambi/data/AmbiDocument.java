@@ -3,10 +3,16 @@ package org.thighfill.ambi.data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.thighfill.ambi.AmbiContext;
+import org.thighfill.ambi.data.cache.Cache;
+import org.thighfill.ambi.data.cache.RecencyCache;
 import org.thighfill.ambi.util.Util;
 
+import javax.imageio.ImageIO;
 import javax.swing.ProgressMonitor;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +30,7 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
     private boolean _twoPageMode, _rightToLeft, _firstPageAlone;
     private Thread _loadThread;
     private ProgressMonitor _monitor;
+    private final Cache<File, BufferedImage> _imageCache;
 
     public AmbiDocument(AmbiContext context, ZipFile zip) throws IOException {
         this(context, zip, processZip(zip));
@@ -43,6 +50,15 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
 
     protected AmbiDocument(AmbiContext context, ZipFile zip, Bean bean) throws IOException {
         super(context);
+        _imageCache = new RecencyCache<>(imgFile -> {
+            try (FileInputStream fis = new FileInputStream(imgFile)) {
+                return ImageIO.read(fis);
+            }
+            catch (IOException e) {
+                Util.handleError(context, "Loading image", e);
+                return null;
+            }
+        }, 10);
         _name = bean.name;
         _author = bean.author;
         _songPack = bean.songPack == null ? null : new SongPack(context, zip, bean.songPack);
@@ -144,6 +160,10 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
 
     public void setFirstPageAlone(boolean firstPageAlone) {
         this._firstPageAlone = firstPageAlone;
+    }
+
+    public Cache<File, BufferedImage> getImageCache() {
+        return _imageCache;
     }
 
     protected static class Bean {
