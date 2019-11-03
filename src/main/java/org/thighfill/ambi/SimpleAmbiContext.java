@@ -48,21 +48,23 @@ public class SimpleAmbiContext implements AmbiContext {
         _localConfig = new File(_localDir, "settings.json");
         Configuration config = null;
         InputStream in = null;
-        if(_localConfig.exists()) {
+        if (_localConfig.exists()) {
             LOGGER.info("Loading local config file {}", _localConfig);
             try {
                 in = new FileInputStream(_localConfig);
-            } catch(FileNotFoundException e) {
+            }
+            catch (FileNotFoundException e) {
                 Util.handleError(this, "Reading nonexistant config file", e);
             }
         }
-        if(in == null) {
+        if (in == null) {
             LOGGER.info("Loading default config file");
             in = SimpleAmbiContext.class.getResourceAsStream(Ambi.SETTINGS_DIR + "/ambi-defaults.json");
         }
         try {
             config = Configuration.fromJSON(in);
-        } catch(IOException e) {
+        }
+        catch (IOException e) {
             Util.handleError(this, "Loading config", e);
             System.exit(-1);
         }
@@ -74,8 +76,8 @@ public class SimpleAmbiContext implements AmbiContext {
         // Create it if it doesn't exist
         Files.createDirectories(tmp);
         // Clear out any old files we might have missed
-        try(DirectoryStream<Path> stream = Files.newDirectoryStream(tmp)){
-            for(Path path : stream){
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(tmp)) {
+            for (Path path : stream) {
                 Files.delete(path);
             }
         }
@@ -84,19 +86,18 @@ public class SimpleAmbiContext implements AmbiContext {
     @Override
     public void saveConfiguration() throws IOException {
         LOGGER.info("Saving local config file at {}", _localConfig);
-        if(!_localConfig.exists()) {
+        if (!_localConfig.exists()) {
             LOGGER.info("Creating local file");
             _localConfig.createNewFile();
         }
-        if(_songPacks != null) {
-            _config.setSongPackPaths(_songPacks.stream()
-                    .map(SongPack::getFilename)
-                    .filter(Objects::nonNull)
+        if (_songPacks != null) {
+            _config.setSongPackPaths(_songPacks.stream().map(SongPack::getFilename).filter(Objects::nonNull)
                     .collect(Collectors.toList()));
         }
         try (OutputStream out = new FileOutputStream(_localConfig)) {
             new ObjectMapper().writeValue(out, _config);
-        } catch(FileNotFoundException e) {
+        }
+        catch (FileNotFoundException e) {
             // This should never happen barring some obscene race condition
             Util.handleError(this, "Config file DNE", e);
         }
@@ -104,11 +105,12 @@ public class SimpleAmbiContext implements AmbiContext {
 
     @Override
     public List<SongPack> getKnownSongPacks() {
-        if(_songPacks == null) {
+        if (_songPacks == null) {
             _songPacks = _config.getSongPackPaths().stream().filter(Objects::nonNull).map(p -> {
                 try {
                     return new SongPack(this, p);
-                } catch(IOException e) {
+                }
+                catch (IOException e) {
                     Util.handleError(this, "Loading song pack", e);
                     return null;
                 }

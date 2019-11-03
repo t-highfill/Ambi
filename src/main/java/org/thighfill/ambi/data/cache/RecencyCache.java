@@ -24,7 +24,7 @@ public class RecencyCache<K, E> extends Cache<K, E> {
     @Override
     protected void added(K key, E val) {
         queue.add(val);
-        while(queue.size() > maxCapacity){
+        while (queue.size() > maxCapacity) {
             queue.remove(0);
         }
     }

@@ -22,7 +22,7 @@ public class ScalingLabel extends JLabel {
         this(img, null);
     }
 
-    public ScalingLabel(BufferedImage img, Dimension minSize){
+    public ScalingLabel(BufferedImage img, Dimension minSize) {
         _master = img;
         setMinimumSize(minSize);
         this.addComponentListener(new ComponentAdapter() {
@@ -36,18 +36,19 @@ public class ScalingLabel extends JLabel {
 
     private void rescale() {
         int width = Math.max(getWidth(), getMinWidth()), height = Math.max(getHeight(), getMinHeight());
-        if(_master != null) {
+        if (_master != null) {
             setIcon(new ImageIcon(Util.resizeToFit(_master, width, height)));
-        }else{
+        }
+        else {
             setIcon(null);
         }
     }
 
-    private int getMinWidth(){
+    private int getMinWidth() {
         return (int) getMinimumSize().getWidth();
     }
 
-    private int getMinHeight(){
+    private int getMinHeight() {
         return (int) getMinimumSize().getHeight();
     }
 

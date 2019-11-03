@@ -8,10 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 public enum Theme {
-    GOOD("good", "Good"),
-    BAD("bad", "Bad"),
-    AMBIENT("ambient", "Ambient", "ambience"),
-    SILENT("silent", "silence");
+    GOOD("good", "Good"), BAD("bad", "Bad"), AMBIENT("ambient", "Ambient", "ambience"), SILENT("silent", "silence");
 
     private final String _jsonName, _friendlyName;
     private final Set<String> _synonyms;
@@ -52,7 +49,7 @@ public enum Theme {
 
     private static Map<String, Theme> initJSONMap() {
         Map<String, Theme> res = new HashMap<>();
-        for(Theme t : Theme.values()) {
+        for (Theme t : Theme.values()) {
             res.put(t.getJsonName(), t);
         }
         return res;

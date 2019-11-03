@@ -32,8 +32,8 @@ public class Song extends ZipStorable<Song.Bean> {
         String[] f = _filename.split("\\.");
         String format = f[f.length - 1];
         _tmpFile = Util.createTempFile(context, "ambisong", '.' + format);
-        try(InputStream in = zip.getInputStream(_entry);
-            OutputStream out = new FileOutputStream(_tmpFile)){
+        try (InputStream in = zip.getInputStream(_entry);
+                OutputStream out = new FileOutputStream(_tmpFile)) {
             LOGGER.debug("Copying song to temp file {}", _tmpFile);
             IOUtils.copy(in, out);
         }

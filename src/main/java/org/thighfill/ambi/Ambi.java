@@ -106,18 +106,19 @@ public class Ambi extends JFrame {
         readerPanel.add(nowPlaying, BorderLayout.SOUTH);
         readerPanel.add(docViewPanel, BorderLayout.CENTER);
 
-//        docViewPanel.setLayout(new BoxLayout(docViewPanel, BoxLayout.LINE_AXIS));
-        docViewPanel.setLayout(new GridLayout(1,2));
+        //        docViewPanel.setLayout(new BoxLayout(docViewPanel, BoxLayout.LINE_AXIS));
+        docViewPanel.setLayout(new GridLayout(1, 2));
         docViewPanel.add(leftPage);
         leftPage.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if(_currentDoc == null) {
+                if (_currentDoc == null) {
                     return;
                 }
-                if(_currentDoc.isRightToLeft()){
+                if (_currentDoc.isRightToLeft()) {
                     nextPage();
-                }else{
+                }
+                else {
                     prevPage();
                 }
             }
@@ -126,12 +127,13 @@ public class Ambi extends JFrame {
         rightPage.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if(_currentDoc == null) {
+                if (_currentDoc == null) {
                     return;
                 }
-                if(_currentDoc.isRightToLeft()){
+                if (_currentDoc.isRightToLeft()) {
                     prevPage();
-                }else{
+                }
+                else {
                     nextPage();
                 }
             }
@@ -141,20 +143,21 @@ public class Ambi extends JFrame {
         KeyListener pageTurn = new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent keyEvent) {
-                if(_currentDoc == null) {
+                if (_currentDoc == null) {
                     return;
                 }
                 int next = KeyEvent.VK_RIGHT, prev = KeyEvent.VK_LEFT;
-                if(_currentDoc.isRightToLeft()) {
+                if (_currentDoc.isRightToLeft()) {
                     int tmp = next;
                     next = prev;
                     prev = tmp;
                 }
                 int key = keyEvent.getKeyCode();
-                if(key == next || key == KeyEvent.VK_DOWN) {
+                if (key == next || key == KeyEvent.VK_DOWN) {
                     LOGGER.debug("Next page keyboard shortcut");
                     nextPage();
-                } else if(key == prev || key == KeyEvent.VK_UP) {
+                }
+                else if (key == prev || key == KeyEvent.VK_UP) {
                     LOGGER.debug("Next page keyboard shortcut");
                     prevPage();
                 }
@@ -164,7 +167,8 @@ public class Ambi extends JFrame {
 
         try {
             setDocument(null);
-        } catch(IOException e) {
+        }
+        catch (IOException e) {
             Util.handleError(context, "Loading null doc", e);
         }
     }
@@ -180,7 +184,7 @@ public class Ambi extends JFrame {
         _viewer.setDocument(doc);
         nowPlaying.setDocument(doc);
         previewPanel.setDocument(null);
-        if(doc != null) {
+        if (doc != null) {
             new Thread(() -> {
                 try {
                     doc.waitForLoad();
@@ -188,7 +192,8 @@ public class Ambi extends JFrame {
                     previewPanel.setDocument(doc);
                     LOGGER.debug("Preview set, setting page...");
                     setPage(0);
-                } catch(InterruptedException e) {
+                }
+                catch (InterruptedException e) {
                     Util.handleError(context, "Loading pages", e);
                     close();
                 }
@@ -199,7 +204,8 @@ public class Ambi extends JFrame {
     public void close() {
         try {
             setDocument(null);
-        } catch(IOException e) {
+        }
+        catch (IOException e) {
             Util.handleError(context, "Closing doc", e);
         }
     }
@@ -215,14 +221,15 @@ public class Ambi extends JFrame {
     public void open() {
         JFileChooser fc = new JFileChooser();
         int res = fc.showOpenDialog(this);
-        switch(res) {
+        switch (res) {
         case JFileChooser.APPROVE_OPTION:
             File f = fc.getSelectedFile();
             LOGGER.info("Opening doc: {}", f);
             Util.busyCursorWhile(context, () -> {
                 try {
                     context.openDocument(f);
-                } catch(IOException e) {
+                }
+                catch (IOException e) {
                     Util.handleError(context, "Opening doc", e);
                 }
             });
@@ -240,7 +247,8 @@ public class Ambi extends JFrame {
         Util.busyCursorWhile(context, () -> {
             try {
                 context.saveConfiguration();
-            } catch(IOException e) {
+            }
+            catch (IOException e) {
                 Util.handleError(context, "Saving config", e);
             }
         });
@@ -294,7 +302,7 @@ public class Ambi extends JFrame {
     private static void printStyle(Style s) {
         Enumeration<?> names = s.getAttributeNames();
         System.out.println("Style: " + s.getName());
-        while(names.hasMoreElements()) {
+        while (names.hasMoreElements()) {
             Object obj = names.nextElement();
             System.out.println('\t' + obj.toString() + ": " + s.getAttribute(obj));
         }
@@ -302,19 +310,19 @@ public class Ambi extends JFrame {
 
     private static void printStyleSheet(StyleSheet sheet) {
         Enumeration<?> names = sheet.getStyleNames();
-        while(names.hasMoreElements()) {
+        while (names.hasMoreElements()) {
             Object name = names.nextElement();
             printStyle(sheet.getStyle(name.toString()));
         }
         System.out.println("===END===");
         StyleSheet[] sheets = sheet.getStyleSheets();
-        if(sheets != null) {
+        if (sheets != null) {
             Stream.of(sheets).forEach(Ambi::printStyleSheet);
         }
     }
 
-    public static void main(
-            String[] args) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException,
+    public static void main(String[] args)
+            throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException,
             IllegalAccessException {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 

@@ -44,11 +44,12 @@ public class PreviewPanel extends JPanel {
         this._ambi = ambi;
         config = ambi.getContext().getConfiguration().getPreviewPanel();
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        imgCache = new RecencyCache<>(i-> new ImageIcon(scaleWidth(currDoc.getPages().get(i).getIcon(), config.getIconWidth())), 20);
+        imgCache = new RecencyCache<>(
+                i -> new ImageIcon(scaleWidth(currDoc.getPages().get(i).getIcon(), config.getIconWidth())), 20);
     }
 
     public void setDocument(AmbiDocument doc) {
-        if(currDoc == doc) {
+        if (currDoc == doc) {
             return;
         }
         LOGGER.debug("Setting document {}", doc);
@@ -61,9 +62,9 @@ public class PreviewPanel extends JPanel {
         parent.setVisible(false);
         pages.forEach(this::remove);
         pages = new LinkedList<>();
-        if(doc != null) {
+        if (doc != null) {
             int idx = 1;
-            for(Page p : doc.getPages()){
+            for (Page p : doc.getPages()) {
                 PagePreview pp = new PagePreview(idx++, p);
                 add(pp);
                 pages.add(pp);
@@ -79,11 +80,11 @@ public class PreviewPanel extends JPanel {
     }
 
     private void setSelected(PagePreview page) {
-        if(currPage != null) {
+        if (currPage != null) {
             currPage.setBackground(currPage.normalBGColor);
         }
         currPage = page;
-        if(page != null) {
+        if (page != null) {
             page.setBackground(SELECTION_COLOR);
         }
     }

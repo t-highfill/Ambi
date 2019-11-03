@@ -14,7 +14,8 @@ public class Clip extends ZipStorable<Clip.Bean> {
 
     private String _name;
     private List<Theme> _themes;
-    private Integer _start, _end;
+    private double _start;
+    private Double _end;
     private double _volume;
     private Song _song;
 
@@ -60,19 +61,19 @@ public class Clip extends ZipStorable<Clip.Bean> {
         _themes = themes;
     }
 
-    public int getStart() {
+    public double getStart() {
         return _start;
     }
 
-    public void setStart(int start) {
+    public void setStart(double start) {
         _start = start;
     }
 
-    public int getEnd() {
+    public Double getEnd() {
         return _end;
     }
 
-    public void setEnd(int end) {
+    public void setEnd(Double end) {
         _end = end;
     }
 
@@ -99,7 +100,8 @@ public class Clip extends ZipStorable<Clip.Bean> {
     protected static class Bean {
         public String name = "", songID = "";
         public List<String> themes = new ArrayList<>();
-        public Integer start, end;
+        public double start = 0.0;
+        public Double end;
         public double volume = 1;
     }
 }

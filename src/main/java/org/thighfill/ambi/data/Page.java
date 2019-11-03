@@ -24,8 +24,9 @@ public abstract class Page extends ZipStorable<Page.Bean> {
         _doc = doc;
         _type = valueOfIgnoreCase(bean.type);
         SongPack pack = doc.getSongPack();
-        if(pack != null){
-            _clip = pack.getClips().stream().filter(clip -> clip.getName().equals(bean.clipName)).findFirst().orElse(null);
+        if (pack != null) {
+            _clip = pack.getClips().stream().filter(clip -> clip.getName().equals(bean.clipName)).findFirst().orElse(
+                    null);
         }
         _themes = bean.themes.stream().map(Theme::fromJSONName).collect(Collectors.toList());
     }
@@ -56,7 +57,7 @@ public abstract class Page extends ZipStorable<Page.Bean> {
 
     protected static Page fromBean(AmbiDocument document, ZipFile zip, Bean bean) {
         Type t = valueOfIgnoreCase(bean.type);
-        switch(t) {
+        switch (t) {
         case IMAGE:
             return new ImagePage(document, zip, bean);
         case TEXT:

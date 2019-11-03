@@ -27,7 +27,7 @@ public class SongPack extends ZipStorable<SongPack.Bean> {
         _author = bean.author;
         List<Song> songs;
         songs = new ArrayList<>(bean.songs.size());
-        for(Song.Bean b : bean.songs) {
+        for (Song.Bean b : bean.songs) {
             songs.add(new Song(context, zip, b));
         }
         _songs = songs;
@@ -54,9 +54,9 @@ public class SongPack extends ZipStorable<SongPack.Bean> {
 
     public Clip getAppropriateClip(List<Theme> themes) {
         List<Clip> clips = new ArrayList<>(_clips);
-        for(Theme t : themes) {
+        for (Theme t : themes) {
             clips = clips.stream().filter(clip -> clip.getThemes().contains(t)).collect(Collectors.toList());
-            if(clips.isEmpty()) {
+            if (clips.isEmpty()) {
                 break;
             }
         }

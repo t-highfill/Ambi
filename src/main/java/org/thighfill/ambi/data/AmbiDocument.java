@@ -37,12 +37,14 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
         new Thread(() -> {
             try {
                 waitForLoad();
-            } catch(InterruptedException e) {
+            }
+            catch (InterruptedException e) {
                 Util.handleError(getContext(), "Waiting for load", e);
             }
             try {
                 zip.close();
-            } catch(IOException e) {
+            }
+            catch (IOException e) {
                 Util.handleError(getContext(), "Closing zip", e);
             }
         }).start();
@@ -67,8 +69,8 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
         _loadThread = new Thread(() -> {
             int idx = 0;
             _monitor.setProgress(idx);
-            for(Page.Bean b : bean.pages){
-                if(_monitor.isCanceled()){
+            for (Page.Bean b : bean.pages) {
+                if (_monitor.isCanceled()) {
                     break;
                 }
                 pages.add(Page.fromBean(this, zip, b));
@@ -82,13 +84,13 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
         _firstPageAlone = bean.firstPageAlone;
     }
 
-    public boolean isLoaded(){
+    public boolean isLoaded() {
         return _loadThread.isAlive();
     }
 
     public boolean waitForLoad() throws InterruptedException {
         _loadThread.join();
-        return ! _monitor.isCanceled();
+        return !_monitor.isCanceled();
     }
 
     @Override

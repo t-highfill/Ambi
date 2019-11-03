@@ -22,16 +22,17 @@ public class ImagePage extends Page {
     protected ImagePage(AmbiDocument doc, ZipFile zip, Bean bean) {
         super(doc, bean);
         _imgFile = bean.imgFile;
-        if(_imgFile == null) {
+        if (_imgFile == null) {
             throw new IllegalArgumentException("Image file cannot be null");
         }
         try {
             _tmpFile = Util.createTempFile(getContext(), "ambiImgPg", '.' + Util.fileExt(_imgFile));
             ZipEntry ent = Util.getEntry(zip, _imgFile);
-            try(FileOutputStream out = new FileOutputStream(_tmpFile)){
+            try (FileOutputStream out = new FileOutputStream(_tmpFile)) {
                 IOUtils.copy(zip.getInputStream(ent), out);
             }
-        } catch(IOException e) {
+        }
+        catch (IOException e) {
             Util.handleError(getContext(), "Loading Image", e);
         }
     }

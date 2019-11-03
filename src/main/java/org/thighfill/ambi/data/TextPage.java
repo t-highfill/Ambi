@@ -46,10 +46,11 @@ public class TextPage extends Page {
         _text = text;
     }
 
-    private static BufferedImage getDocIcon(){
+    private static BufferedImage getDocIcon() {
         try {
-            return ImageIO.read(Page.class.getResource(Ambi.IMGS_DIR+"/doc-icon.png"));
-        } catch(IOException e) {
+            return ImageIO.read(Page.class.getResource(Ambi.IMGS_DIR + "/doc-icon.png"));
+        }
+        catch (IOException e) {
             Util.handleError(null, "Loading doc icon", e);
             return null;
         }

@@ -18,7 +18,7 @@ public class ZipTree {
         _zipFile = zipFile;
         Map<ZipEntry, LinkedList<String>> entriesMap = new HashMap<>();
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        while(entries.hasMoreElements()) {
+        while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
             entriesMap.put(entry, new LinkedList<>(Arrays.asList(entry.getName().split("/"))));
         }
@@ -73,19 +73,19 @@ public class ZipTree {
             }));
         }
 
-        public ZFile get(String name){
+        public ZFile get(String name) {
             return _listing.get(name);
         }
 
-        public ZFile find(String name){
+        public ZFile find(String name) {
             ZFile res = get(name);
-            if(res != null){
+            if (res != null) {
                 return res;
             }
-            for(ZFile file : _listing.values()){
-                if(file instanceof ZDirectory){
+            for (ZFile file : _listing.values()) {
+                if (file instanceof ZDirectory) {
                     res = ((ZDirectory) file).find(name);
-                    if(res != null){
+                    if (res != null) {
                         return res;
                     }
                 }

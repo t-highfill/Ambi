@@ -40,14 +40,14 @@ public class Configuration {
         this.songPackPaths = songPackPaths;
     }
 
-    public static class AmbiFrameConfig{
+    public static class AmbiFrameConfig {
         private int width, height;
 
-        public Dimension getDimensions(){
+        public Dimension getDimensions() {
             return new Dimension(width, height);
         }
 
-        public void setDimensions(Dimension dim){
+        public void setDimensions(Dimension dim) {
             width = (int) dim.getWidth();
             height = (int) dim.getHeight();
         }
@@ -69,7 +69,7 @@ public class Configuration {
         }
     }
 
-    public static class PreviewPanelConfig{
+    public static class PreviewPanelConfig {
         private int width, iconWidth;
         private boolean visible;
 
@@ -98,7 +98,7 @@ public class Configuration {
         }
     }
 
-    public static class ToolbarConfig{
+    public static class ToolbarConfig {
         private boolean visible;
 
         public boolean isVisible() {

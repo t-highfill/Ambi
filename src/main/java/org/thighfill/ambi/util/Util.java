@@ -31,20 +31,21 @@ public final class Util {
         return IOUtils.toString(in, charset);
     }
 
-    public static void busyCursorWhile(AmbiContext context, Runnable runner){
+    public static void busyCursorWhile(AmbiContext context, Runnable runner) {
         context.getAmbi().setCursor(new Cursor(Cursor.WAIT_CURSOR));
         runner.run();
         context.getAmbi().setCursor(Cursor.getDefaultCursor());
     }
 
-    public static BufferedImage resizeToFit(BufferedImage image, int width, int height){
+    public static BufferedImage resizeToFit(BufferedImage image, int width, int height) {
         int newWidth, newHeight;
-        if(width < height){
+        if (width < height) {
             newWidth = width;
-            newHeight = image.getHeight()*newWidth/image.getWidth();
-        }else{
+            newHeight = image.getHeight() * newWidth / image.getWidth();
+        }
+        else {
             newHeight = height;
-            newWidth = image.getWidth()*newHeight/image.getHeight();
+            newWidth = image.getWidth() * newHeight / image.getHeight();
         }
         return resize(image, newWidth, newHeight);
     }
@@ -62,11 +63,11 @@ public final class Util {
         LOGGER.debug("Searching {} for {}", zip, filename);
         Enumeration<? extends ZipEntry> entries = zip.entries();
         int idx = 0;
-        while(entries.hasMoreElements()) {
+        while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
             idx++;
             //System.out.println("Entry " + idx + ": \"" + entry.getName() + '"');
-            if(entry.getName().endsWith(filename)) {
+            if (entry.getName().endsWith(filename)) {
                 return entry;
             }
         }
@@ -89,6 +90,6 @@ public final class Util {
 
     public static String fileExt(String fileName) {
         String[] arr = fileName.split("\\.");
-        return arr[arr.length-1];
+        return arr[arr.length - 1];
     }
 }

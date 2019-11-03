@@ -12,12 +12,13 @@ public abstract class Cache<K, E> {
         this.builder = builder;
     }
 
-    public E get(K key){
+    public E get(K key) {
         E val;
-        if(cacheMap.containsKey(key)){
+        if (cacheMap.containsKey(key)) {
             val = cacheMap.get(key);
             accessed(key, val);
-        }else{
+        }
+        else {
             val = builder.apply(key);
             cacheMap.put(key, val);
             added(key, val);
@@ -26,5 +27,6 @@ public abstract class Cache<K, E> {
     }
 
     protected abstract void accessed(K key, E val);
+
     protected abstract void added(K key, E val);
 }

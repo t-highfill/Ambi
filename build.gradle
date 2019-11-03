@@ -33,9 +33,6 @@ dependencies {
   //PDF stuff
   compile name:'pdfbox-2.0.7'
 
-  //MP3 player lib
-  compile name:'jaco-mp3-player-0.9.3'
-
   //MP3 ID3 Metadata lib
   compile group:'com.mpatric', name:'mp3agic', version:'0.9.0'
 }
