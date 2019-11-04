@@ -3,6 +3,8 @@ package org.thighfill.ambi;
 import org.thighfill.ambi.data.AmbiDocument;
 import org.thighfill.ambi.data.Page;
 
+import javax.swing.JLabel;
+
 import java.util.Arrays;
 
 public class PageViewer {
@@ -12,6 +14,8 @@ public class PageViewer {
     public PageViewer(ScalingLabel leftPage, ScalingLabel rightPage) {
         _leftLbl = leftPage;
         _rightLbl = rightPage;
+        _leftLbl.setHorizontalAlignment(JLabel.RIGHT);
+        _rightLbl.setHorizontalAlignment(JLabel.LEFT);
     }
 
     private AmbiDocument currDoc = null;

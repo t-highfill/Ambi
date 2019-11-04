@@ -35,7 +35,8 @@ public class ScalingLabel extends JLabel {
     }
 
     private void rescale() {
-        int width = Math.max(getWidth(), getMinWidth()), height = Math.max(getHeight(), getMinHeight());
+        int width = Math.max(getWidth(), getMinWidth());
+        int height = Math.max(getHeight(), getMinHeight());
         if (_master != null) {
             setIcon(new ImageIcon(Util.resizeToFit(_master, width, height)));
         }

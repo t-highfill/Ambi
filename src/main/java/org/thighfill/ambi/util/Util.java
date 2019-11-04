@@ -39,11 +39,12 @@ public final class Util {
 
     public static BufferedImage resizeToFit(BufferedImage image, int width, int height) {
         int newWidth, newHeight;
-        if (width < height) {
-            newWidth = width;
-            newHeight = image.getHeight() * newWidth / image.getWidth();
-        }
-        else {
+        // Try scaling by width
+        newWidth = width;
+        newHeight = image.getHeight() * newWidth / image.getWidth();
+        // Check whether we've exceeded our bounds
+        if (newHeight > height) {
+            // Scale by height instead
             newHeight = height;
             newWidth = image.getWidth() * newHeight / image.getHeight();
         }
