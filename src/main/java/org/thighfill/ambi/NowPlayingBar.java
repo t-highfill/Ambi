@@ -9,6 +9,7 @@ import org.thighfill.ambi.util.Util;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
@@ -42,6 +43,7 @@ public class NowPlayingBar extends JToolBar {
 
         Stream.of(_songPackSelector, _metaPanel, _playPause, _volumeSlider, _muteBtn).forEach(c -> {
             c.setVisible(true);
+            ((JComponent) c).setFocusable(false);
             add(c);
         });
 

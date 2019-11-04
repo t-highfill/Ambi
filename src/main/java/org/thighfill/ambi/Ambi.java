@@ -24,7 +24,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -35,6 +34,11 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.stream.Stream;
 
+/**
+ * The main class. Extends JFrame and encapsulates the entire application
+ *
+ * @author Tobias Highfill
+ */
 public class Ambi extends JFrame {
 
     private static final Logger LOGGER = Util.getLogger(Ambi.class);
@@ -52,7 +56,8 @@ public class Ambi extends JFrame {
     private JPanel readerPanel = new JPanel();
 
     private JPanel docViewPanel = new JPanel();
-    private ScalingLabel leftPage = new ScalingLabel(), rightPage = new ScalingLabel();
+    private ScalingLabel leftPage = new ScalingLabel();
+    private ScalingLabel rightPage = new ScalingLabel();
 
     private JScrollPane previewScrollPane;
 
@@ -61,8 +66,12 @@ public class Ambi extends JFrame {
     private PageViewer _viewer = new PageViewer(leftPage, rightPage);
     private AmbiDocument _currentDoc = null;
 
+    /**
+     * Builds an Ambi application window
+     */
     public Ambi() {
         super("Ambi - The Musical Book Reader");
+        // The order of initialization here is VERY IMPORTANT. A lot of inter-related dependencies
         context = new SimpleAmbiContext(this);
         previewPanel = new PreviewPanel(this);
         menuBar = new AmbiMenuBar(context);
@@ -85,6 +94,7 @@ public class Ambi extends JFrame {
                 exit();
             }
         });
+        // Update the config's settings constantly to reflect user changes
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent componentEvent) {
@@ -93,6 +103,7 @@ public class Ambi extends JFrame {
             }
         });
 
+        // Make everything visible
         Stream.of(menuBar, toolBar, mainPanel, previewPanel, readerPanel, nowPlaying, docViewPanel, previewScrollPane,
                 leftPage, rightPage, _splitPane).forEach(c -> c.setVisible(true));
         this.add(mainPanel);
@@ -106,71 +117,51 @@ public class Ambi extends JFrame {
         readerPanel.add(nowPlaying, BorderLayout.SOUTH);
         readerPanel.add(docViewPanel, BorderLayout.CENTER);
 
-        //        docViewPanel.setLayout(new BoxLayout(docViewPanel, BoxLayout.LINE_AXIS));
         docViewPanel.setLayout(new GridLayout(1, 2));
         docViewPanel.add(leftPage);
         leftPage.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (_currentDoc == null) {
-                    return;
-                }
-                if (_currentDoc.isRightToLeft()) {
-                    nextPage();
-                }
-                else {
-                    prevPage();
-                }
+                goLeft();
             }
         });
         docViewPanel.add(rightPage);
         rightPage.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (_currentDoc == null) {
-                    return;
-                }
-                if (_currentDoc.isRightToLeft()) {
-                    prevPage();
-                }
-                else {
-                    nextPage();
-                }
+                goRight();
             }
         });
         docViewPanel.setMinimumSize(new Dimension(0, 0));
 
-        KeyListener pageTurn = new KeyAdapter() {
+        this.addKeyListener(new KeyAdapter() {
             @Override
-            public void keyReleased(KeyEvent keyEvent) {
+            public void keyPressed(KeyEvent keyEvent) {
                 if (_currentDoc == null) {
                     return;
                 }
-                int next = KeyEvent.VK_RIGHT, prev = KeyEvent.VK_LEFT;
-                if (_currentDoc.isRightToLeft()) {
-                    int tmp = next;
-                    next = prev;
-                    prev = tmp;
-                }
-                int key = keyEvent.getKeyCode();
-                if (key == next || key == KeyEvent.VK_DOWN) {
-                    LOGGER.debug("Next page keyboard shortcut");
+                switch (keyEvent.getKeyCode()) {
+                case KeyEvent.VK_KP_RIGHT:
+                case KeyEvent.VK_RIGHT:
+                    goRight();
+                    break;
+                case KeyEvent.VK_KP_LEFT:
+                case KeyEvent.VK_LEFT:
+                    goLeft();
+                    break;
+                case KeyEvent.VK_KP_DOWN:
+                case KeyEvent.VK_DOWN:
                     nextPage();
-                }
-                else if (key == prev || key == KeyEvent.VK_UP) {
-                    LOGGER.debug("Next page keyboard shortcut");
+                    break;
+                case KeyEvent.VK_KP_UP:
+                case KeyEvent.VK_UP:
                     prevPage();
+                    break;
                 }
             }
-        };
-        Stream.of(this, docViewPanel, previewPanel, previewPanel).forEach(c -> c.addKeyListener(pageTurn));
+        });
 
-        try {
-            setDocument(null);
-        }
-        catch (IOException e) {
-            Util.handleError(context, "Loading null doc", e);
-        }
+        setDocument(null);
     }
 
     public void setPage(int idx) {
@@ -179,7 +170,7 @@ public class Ambi extends JFrame {
         nowPlaying.setPage(idx);
     }
 
-    public void setDocument(AmbiDocument doc) throws IOException {
+    public void setDocument(AmbiDocument doc) {
         _currentDoc = doc;
         _viewer.setDocument(doc);
         nowPlaying.setDocument(doc);
@@ -202,11 +193,30 @@ public class Ambi extends JFrame {
     }
 
     public void close() {
-        try {
-            setDocument(null);
+        setDocument(null);
+    }
+
+    public void goLeft() {
+        if (_currentDoc == null) {
+            return;
         }
-        catch (IOException e) {
-            Util.handleError(context, "Closing doc", e);
+        if (_currentDoc.isRightToLeft()) {
+            nextPage();
+        }
+        else {
+            prevPage();
+        }
+    }
+
+    public void goRight() {
+        if (_currentDoc == null) {
+            return;
+        }
+        if (_currentDoc.isRightToLeft()) {
+            prevPage();
+        }
+        else {
+            nextPage();
         }
     }
 
@@ -234,7 +244,7 @@ public class Ambi extends JFrame {
         }
     }
 
-    public void open(File f){
+    public void open(File f) {
         context.getConfiguration().addFileToHistory(f);
         LOGGER.info("Opening doc: {}", f);
         Util.busyCursorWhile(context, () -> {

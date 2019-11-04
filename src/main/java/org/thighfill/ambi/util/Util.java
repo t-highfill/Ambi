@@ -1,6 +1,5 @@
 package org.thighfill.ambi.util;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.thighfill.ambi.AmbiContext;
@@ -11,11 +10,12 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
+/**
+ * Static utility class for various needs
+ *
+ * @author Tobias Highfill
+ */
 public final class Util {
 
     private static final Logger LOGGER = getLogger(Util.class);
@@ -23,20 +23,36 @@ public final class Util {
     private Util() {
     }
 
+    /**
+     * Gets the logger for the given class
+     *
+     * @param cls The class to log
+     * @return The logger for that class
+     */
     public static Logger getLogger(Class<?> cls) {
         return LogManager.getLogger(cls);
     }
 
-    public static String readAll(InputStream in, String charset) throws IOException {
-        return IOUtils.toString(in, charset);
-    }
-
+    /**
+     * Sets the user's cursor to "Busy" while the Runnable is running and then returns to default
+     *
+     * @param context The current Ambi context
+     * @param runner The runner to run
+     */
     public static void busyCursorWhile(AmbiContext context, Runnable runner) {
         context.getAmbi().setCursor(new Cursor(Cursor.WAIT_CURSOR));
         runner.run();
         context.getAmbi().setCursor(Cursor.getDefaultCursor());
     }
 
+    /**
+     * Resize an image to fill the given bounds without exceeding them
+     *
+     * @param image The image to scale
+     * @param width The maximum width
+     * @param height The maximum height
+     * @return The resized image
+     */
     public static BufferedImage resizeToFit(BufferedImage image, int width, int height) {
         int newWidth, newHeight;
         // Try scaling by width
@@ -51,6 +67,14 @@ public final class Util {
         return resize(image, newWidth, newHeight);
     }
 
+    /**
+     * Resize an image to an arbitrary size. Will distort if aspect ratio is not maintained
+     *
+     * @param image The image to resize
+     * @param width The new width
+     * @param height The new height
+     * @return The resized image
+     */
     public static BufferedImage resize(BufferedImage image, int width, int height) {
         BufferedImage bi = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
         Graphics2D g2d = bi.createGraphics();
@@ -60,35 +84,37 @@ public final class Util {
         return bi;
     }
 
-    public static ZipEntry getEntry(ZipFile zip, String filename) throws IOException {
-        LOGGER.debug("Searching {} for {}", zip, filename);
-        Enumeration<? extends ZipEntry> entries = zip.entries();
-        int idx = 0;
-        while (entries.hasMoreElements()) {
-            ZipEntry entry = entries.nextElement();
-            idx++;
-            //System.out.println("Entry " + idx + ": \"" + entry.getName() + '"');
-            if (entry.getName().endsWith(filename)) {
-                return entry;
-            }
-        }
-        throw new IllegalArgumentException("Could not find file " + filename + " in zip");
-    }
-
+    /**
+     * Creates a new temporary file and marks it for deletion on exit. Files are created within a special folder
+     * maintained by the context
+     *
+     * @param context The current Ambi context
+     * @param prefix The beginning of the filename
+     * @param postfix The end of the filename
+     * @return The temporary file
+     * @throws IOException
+     */
     public static File createTempFile(AmbiContext context, String prefix, String postfix) throws IOException {
         File tmp = File.createTempFile(prefix, postfix, context.getTempDirectory());
         tmp.deleteOnExit();
         return tmp;
     }
 
+    /**
+     * Logs error messages. Can be updated later to do more with the error
+     * @param context The current Ambi context
+     * @param message An error specific message
+     * @param e The exception that occurred
+     */
     public static void handleError(AmbiContext context, String message, Exception e) {
         LOGGER.error(message, e);
     }
 
-    public static void handleError(AmbiContext context, Exception e) {
-        handleError(context, "Unhandled exception", e);
-    }
-
+    /**
+     * Gets a filename's file extension
+     * @param fileName The filename to break up
+     * @return The filename's extension
+     */
     public static String fileExt(String fileName) {
         String[] arr = fileName.split("\\.");
         return arr[arr.length - 1];
