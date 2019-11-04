@@ -7,27 +7,29 @@ import org.thighfill.ambi.data.Page;
 import org.thighfill.ambi.data.SongPack;
 import org.thighfill.ambi.util.Util;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-import javax.swing.JToolBar;
 
 import java.util.stream.Stream;
 
-public class NowPlayingBar extends JToolBar {
+public class NowPlayingBar extends IconToolBar {
 
     private static Logger LOGGER = Util.getLogger(NowPlayingBar.class);
     private static int MAX_VOLUME = 100;
+    private static ImageIcon PLAY = loadIcon(MEDIA, "Play");
+    private static ImageIcon PAUSE = loadIcon(MEDIA, "Pause");
 
     private AmbiContext _context;
 
     private JComboBox<SongPack> _songPackSelector = new JComboBox<>();
     private JLabel _songName = new JLabel(), _artist = new JLabel();
     private JPanel _metaPanel = new JPanel();
-    private JButton _playPause = new JButton("Play/Pause");
+    private JButton _playPause = new JButton();
     private final JSlider _volumeSlider = new JSlider(0, MAX_VOLUME, MAX_VOLUME);
     private final JButton _muteBtn = new JButton("Mute");
 
@@ -60,12 +62,13 @@ public class NowPlayingBar extends JToolBar {
         _songPackSelector.addActionListener(e -> setSongPack((SongPack) _songPackSelector.getSelectedItem()));
 
         _playPause.addActionListener(e -> {
-            if (_player.isPaused()) {
-                _player.play();
-            }
-            else {
+            if (_player.isPlaying()) {
                 _player.pause();
             }
+            else {
+                _player.play();
+            }
+            updatePlayPause();
         });
 
         _volumeSlider.addChangeListener(e -> {
@@ -74,6 +77,18 @@ public class NowPlayingBar extends JToolBar {
             _player.setMute(false);
         });
         _muteBtn.addActionListener(e -> _player.setMute(!_player.isMute()));
+
+        _player.statusUpdated.addListener(s -> updatePlayPause());
+        updatePlayPause();
+    }
+
+    private void updatePlayPause() {
+        if (_player.isPlaying()) {
+            _playPause.setIcon(PAUSE);
+        }
+        else {
+            _playPause.setIcon(PLAY);
+        }
     }
 
     private void setSongPack(SongPack songPack) {
@@ -96,9 +111,19 @@ public class NowPlayingBar extends JToolBar {
             return;
         }
         Page page = _currDoc.getPages().get(_page);
-        SongPack pack = _songPack instanceof InternalSongPack ? _currDoc.getSongPack() : _songPack;
-        Clip clip = page.getClip();
+        SongPack pack;
+        Clip clip = null;
+        if (_songPack instanceof InternalSongPack) {
+            pack = _currDoc.getSongPack();
+            // Look for hand-picked clip
+            clip = page.getClip();
+        }
+        else {
+            pack = _songPack;
+        }
         if (clip == null) {
+            // If using custom songpack or no hand-picked clip available we have to look for an appropriate song in
+            // our current pack
             if (pack == null) {
                 LOGGER.error("Null songpack");
                 return;
@@ -110,10 +135,17 @@ public class NowPlayingBar extends JToolBar {
                 return;
             }
         }
-        _songName.setText(clip.getName());
-        _artist.setText(clip.getArtist());
-        _player.setClip(clip);
-        _player.play();
+        if (clip != _player.getClip()) {
+            _songName.setText(clip.getName());
+            _artist.setText(clip.getArtist());
+            // Setting the clip resets the player so we need to check this now
+            boolean playing = _player.isPlaying();
+            _player.setClip(clip);
+            if (playing || _page == 0) {
+                // Only start playing if we were playing already or if we just opened the book
+                _player.play();
+            }
+        }
     }
 
     private class InternalSongPack extends SongPack {

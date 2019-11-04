@@ -36,9 +36,9 @@ public class Configuration {
         }
     }
     @JsonIgnore
-    private EventDriver<HistoryEvent> _historyDriver = new EventDriver<>();
+    private final EventDriver<HistoryEvent> _historyDriver = new EventDriver<>();
     @JsonIgnore
-    public Event<HistoryEvent> historyUpdated = _historyDriver.getMyEvent();
+    public final Event<HistoryEvent> historyUpdated = _historyDriver.getMyEvent();
 
     private AmbiFrameConfig ambiFrame;
     private PreviewPanelConfig previewPanel;

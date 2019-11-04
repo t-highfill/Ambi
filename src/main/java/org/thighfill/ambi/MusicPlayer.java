@@ -7,6 +7,8 @@ import javafx.util.Duration;
 
 import org.apache.logging.log4j.Logger;
 import org.thighfill.ambi.data.Clip;
+import org.thighfill.ambi.event.Event;
+import org.thighfill.ambi.event.EventDriver;
 import org.thighfill.ambi.util.Util;
 
 import javax.swing.SwingUtilities;
@@ -38,6 +40,9 @@ public class MusicPlayer {
 
     private final AmbiContext _context;
 
+    private final EventDriver<MediaPlayer.Status> _statusEventDriver = new EventDriver<>();
+    public final Event<MediaPlayer.Status> statusUpdated = _statusEventDriver.getMyEvent();
+
     private MediaPlayer _player;
     private double _masterVolume = 1.0;
     private boolean _mute = false;
@@ -61,6 +66,9 @@ public class MusicPlayer {
         File tmpFile = clip.getSong().getTmpFile();
         Media media = new Media(tmpFile.toURI().toString());
         _player = new MediaPlayer(media);
+        _player.setOnPlaying(() -> _statusEventDriver.fire(_player.getStatus()));
+        _player.setOnPaused(() -> _statusEventDriver.fire(_player.getStatus()));
+        _player.setOnStopped(() -> _statusEventDriver.fire(_player.getStatus()));
         _player.setCycleCount(MediaPlayer.INDEFINITE);
         _player.setStartTime(new Duration(clip.getStart()));
         Double end = clip.getEnd();
@@ -120,5 +128,13 @@ public class MusicPlayer {
         if (_player != null) {
             _player.stop();
         }
+    }
+
+    public boolean isPlaying() {
+        return _player != null && _player.getStatus() == MediaPlayer.Status.PLAYING;
+    }
+
+    public Clip getClip() {
+        return _clip;
     }
 }

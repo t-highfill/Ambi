@@ -32,6 +32,7 @@ dependencies {
 
   //PDF stuff
   compile name:'pdfbox-2.0.7'
+  compile name:'jlfgr-1_0'
 
   //MP3 ID3 Metadata lib
   compile group:'com.mpatric', name:'mp3agic', version:'0.9.0'

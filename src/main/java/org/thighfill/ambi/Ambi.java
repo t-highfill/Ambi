@@ -50,7 +50,7 @@ public class Ambi extends JFrame {
     private final AmbiContext context;
     private AmbiMenuBar menuBar;
     private NowPlayingBar nowPlaying;
-    private JToolBar toolBar = new JToolBar();
+    private AmbiToolBar toolBar;
     private JPanel mainPanel = new JPanel();
     private PreviewPanel previewPanel;
     private JPanel readerPanel = new JPanel();
@@ -74,6 +74,7 @@ public class Ambi extends JFrame {
         // The order of initialization here is VERY IMPORTANT. A lot of inter-related dependencies
         context = new SimpleAmbiContext(this);
         previewPanel = new PreviewPanel(this);
+        toolBar = new AmbiToolBar(context);
         menuBar = new AmbiMenuBar(context);
         nowPlaying = new NowPlayingBar(context);
 
