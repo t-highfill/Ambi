@@ -8,7 +8,6 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.zip.ZipFile;
 
 public abstract class Page extends ZipStorable<Page.Bean> {
 
@@ -55,13 +54,15 @@ public abstract class Page extends ZipStorable<Page.Bean> {
         return Type.valueOf(type.toUpperCase());
     }
 
-    protected static Page fromBean(AmbiDocument document, ZipTree zipTree, Bean bean) {
+    protected static Page fromBean(AmbiDocument document, ZipTree zipTree, Bean bean, int pageNum) {
         Type t = valueOfIgnoreCase(bean.type);
         switch (t) {
         case IMAGE:
             return new ImagePage(document, zipTree, bean);
         case TEXT:
             return new TextPage(document, bean);
+        case PDF:
+            return new PDFPage(document, bean, pageNum);
         default:
             throw new IllegalArgumentException("Unknown Type: " + t);
         }
@@ -89,10 +90,11 @@ public abstract class Page extends ZipStorable<Page.Bean> {
 
     protected static class Bean {
         public String type, imgFile, text, clipName;
+        public Integer pageNum;
         public List<String> themes = new ArrayList<>();
     }
 
     public enum Type {
-        IMAGE, TEXT
+        IMAGE, TEXT, PDF
     }
 }

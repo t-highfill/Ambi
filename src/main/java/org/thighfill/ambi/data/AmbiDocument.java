@@ -2,6 +2,10 @@ package org.thighfill.ambi.data;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.thighfill.ambi.AmbiContext;
 import org.thighfill.ambi.data.cache.Cache;
 import org.thighfill.ambi.data.cache.RecencyCache;
@@ -14,23 +18,48 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
-public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
+public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> implements AutoCloseable {
 
+    private static final Logger LOGGER = Util.getLogger(AmbiDocument.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String MAIN_FILE = "doc.json";
+    private static final int CACHE_SIZE = 10;
+    private static final float PDF_DPI = 100f;
 
-    private String _name, _author;
+    private String _name, _author, _pdfFile;
     private SongPack _songPack;
     private List<Page> pages;
     private boolean _twoPageMode, _rightToLeft, _firstPageAlone;
     private Thread _loadThread;
     private ProgressMonitor _monitor;
-    private final Cache<File, BufferedImage> _imageCache;
+
+    private PDDocument _pdf;
+    private PDFRenderer _renderer;
+
+    private final Cache<File, BufferedImage> _imageCache = new RecencyCache<>(imgFile -> {
+        try (FileInputStream fis = new FileInputStream(imgFile)) {
+            return ImageIO.read(fis);
+        }
+        catch (IOException e) {
+            Util.handleError(getContext(), "Loading image", e);
+            return null;
+        }
+    }, CACHE_SIZE);
+    private final Cache<Integer, BufferedImage> _pdfCache = new RecencyCache<>(idx -> {
+        try {
+            return _renderer.renderImageWithDPI(idx, PDF_DPI);
+        }
+        catch (IOException e) {
+            Util.handleError(getContext(), "Loading page from pdf", e);
+            return null;
+        }
+    }, 2);
 
     public AmbiDocument(AmbiContext context, ZipFile zip) throws IOException {
         this(context, new ZipTree(zip));
@@ -55,28 +84,21 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
         ZipTree.ZRegFile mainFile = findMainFile(zipTree);
         Bean bean = processZip(mainFile);
         ZipTree newRoot = zipTree.chroot(mainFile.getParent());
-        _imageCache = new RecencyCache<>(imgFile -> {
-            try (FileInputStream fis = new FileInputStream(imgFile)) {
-                return ImageIO.read(fis);
-            }
-            catch (IOException e) {
-                Util.handleError(context, "Loading image", e);
-                return null;
-            }
-        }, 10);
         _name = bean.name;
         _author = bean.author;
-        _songPack = bean.songPack == null ? null : new SongPack(context, newRoot, bean.songPack);
+        _pdfFile = bean.pdfFile;
         _monitor = new ProgressMonitor(context.getAmbi(), "Loading pages", "", 0, bean.pages.size());
+        _songPack = bean.songPack == null ? null : new SongPack(context, newRoot, bean.songPack);
         pages = new ArrayList<>(bean.pages.size());
         _loadThread = new Thread(() -> {
             int idx = 0;
             _monitor.setProgress(idx);
+            loadPDF(newRoot);
             for (Page.Bean b : bean.pages) {
                 if (_monitor.isCanceled()) {
                     break;
                 }
-                pages.add(Page.fromBean(this, newRoot, b));
+                pages.add(Page.fromBean(this, newRoot, b, idx));
                 idx++;
                 _monitor.setProgress(idx);
             }
@@ -85,6 +107,26 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
         _twoPageMode = bean.twoPageMode;
         _rightToLeft = bean.rightToLeft;
         _firstPageAlone = bean.firstPageAlone;
+    }
+
+    public boolean hasPDF(){
+        return _pdfFile != null;
+    }
+
+    private void loadPDF(ZipTree zipTree){
+        if(_pdfFile == null){
+            return;
+        }
+        try {
+            LOGGER.info("Loading PDF...");
+            InputStream in = zipTree.getRoot().followPath(_pdfFile).asRegFile().getInputStream();
+            _pdf = PDDocument.load(in, MemoryUsageSetting.setupTempFileOnly());
+            LOGGER.info("PDF loaded");
+            _renderer = new PDFRenderer(_pdf);
+        }
+        catch (IOException e) {
+            Util.handleError(getContext(), "Loading pdf", e);
+        }
     }
 
     public boolean isLoaded() {
@@ -101,6 +143,7 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
         Bean res = new Bean();
         res.name = _name;
         res.author = _author;
+        res.pdfFile = _pdfFile;
         res.songPack = _songPack.toBean();
         res.pages = pages.stream().map(Page::toBean).collect(Collectors.toList());
         res.twoPageMode = _twoPageMode;
@@ -175,8 +218,25 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> {
         return _imageCache;
     }
 
+    public Cache<Integer, BufferedImage> getPdfCache() {
+        return _pdfCache;
+    }
+
+    @Override
+    public void close() throws Exception {
+        if(_pdf != null){
+            _pdf.close();
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        close();
+    }
+
     protected static class Bean {
-        public String name, author;
+        public String name, author, pdfFile;
         public SongPack.Bean songPack;
         public List<Page.Bean> pages;
         public boolean twoPageMode, rightToLeft, firstPageAlone;

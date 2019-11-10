@@ -341,6 +341,7 @@ public class Ambi extends JFrame {
             throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException,
             IllegalAccessException {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        System.setProperty("sun.java2d.cmm", "sun.java2d.cmm.kcms.KcmsServiceProvider");
 
         Ambi ambi = new Ambi();
         ambi.pack();
