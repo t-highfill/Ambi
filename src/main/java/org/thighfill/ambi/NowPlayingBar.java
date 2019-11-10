@@ -68,7 +68,6 @@ public class NowPlayingBar extends IconToolBar {
             else {
                 _player.play();
             }
-            updatePlayPause();
         });
 
         _volumeSlider.addChangeListener(e -> {

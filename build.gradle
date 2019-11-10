@@ -31,7 +31,10 @@ dependencies {
   compile group: 'org.apache.commons', name: 'commons-text', version: '1.1'
 
   //PDF stuff
-  compile name:'pdfbox-2.0.7'
+  // https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox
+  compile group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.17'
+
+  // Icons
   compile name:'jlfgr-1_0'
 
   //MP3 ID3 Metadata lib
