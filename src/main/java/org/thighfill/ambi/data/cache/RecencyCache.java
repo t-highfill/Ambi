@@ -7,7 +7,7 @@ import java.util.function.Function;
 public class RecencyCache<K, E> extends Cache<K, E> {
 
     private final int maxCapacity;
-    private final List<E> queue;
+    private final List<K> queue;
 
     public RecencyCache(Function<K, E> builder, int maxCapacity) {
         super(builder);
@@ -17,15 +17,15 @@ public class RecencyCache<K, E> extends Cache<K, E> {
 
     @Override
     protected void accessed(K key, E val) {
-        queue.remove(val);
-        queue.add(val);
+        queue.remove(key);
+        queue.add(key);
     }
 
     @Override
     protected void added(K key, E val) {
-        queue.add(val);
+        queue.add(key);
         while (queue.size() > maxCapacity) {
-            queue.remove(0);
+            drop(queue.remove(0));
         }
     }
 }

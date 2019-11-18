@@ -26,6 +26,10 @@ public abstract class Cache<K, E> {
         return val;
     }
 
+    protected void drop(K key){
+        cacheMap.remove(key);
+    }
+
     protected abstract void accessed(K key, E val);
 
     protected abstract void added(K key, E val);

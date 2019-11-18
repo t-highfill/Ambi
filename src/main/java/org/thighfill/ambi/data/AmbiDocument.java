@@ -30,7 +30,7 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> implements Auto
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String MAIN_FILE = "doc.json";
     private static final int CACHE_SIZE = 10;
-    private static final float PDF_DPI = 100f;
+    private static final float PDF_DPI = 72f;
 
     private String _name, _author, _pdfFile;
     private SongPack _songPack;
@@ -109,18 +109,20 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> implements Auto
         _firstPageAlone = bean.firstPageAlone;
     }
 
-    public boolean hasPDF(){
+    public boolean hasPDF() {
         return _pdfFile != null;
     }
 
-    private void loadPDF(ZipTree zipTree){
-        if(_pdfFile == null){
+    private void loadPDF(ZipTree zipTree) {
+        if (_pdfFile == null) {
             return;
         }
-        try {
+        try (InputStream in = zipTree.getRoot().followPath(_pdfFile).asRegFile().getInputStream()) {
             LOGGER.info("Loading PDF...");
-            InputStream in = zipTree.getRoot().followPath(_pdfFile).asRegFile().getInputStream();
-            _pdf = PDDocument.load(in, MemoryUsageSetting.setupTempFileOnly());
+
+            MemoryUsageSetting memSettings = MemoryUsageSetting.setupTempFileOnly().setTempDir(
+                    getContext().getTempDirectory());
+            _pdf = PDDocument.load(in, memSettings);
             LOGGER.info("PDF loaded");
             _renderer = new PDFRenderer(_pdf);
         }
@@ -150,7 +152,7 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> implements Auto
         return res;
     }
 
-    private static ZipTree.ZRegFile findMainFile(ZipTree zipTree){
+    private static ZipTree.ZRegFile findMainFile(ZipTree zipTree) {
         return zipTree.getRoot().find(MAIN_FILE).asRegFile();
     }
 
@@ -224,7 +226,7 @@ public class AmbiDocument extends ZipStorable<AmbiDocument.Bean> implements Auto
 
     @Override
     public void close() throws Exception {
-        if(_pdf != null){
+        if (_pdf != null) {
             _pdf.close();
         }
     }
